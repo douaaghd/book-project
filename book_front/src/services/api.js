@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: 'http://127.0.0.1:3000',
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -43,12 +43,23 @@ export const authService = {
 }
 
 // ── Books
+// Dans src/services/api.js
+
 export const bookService = {
-  getAll:  ()         => api.get('/books'),
-  getById: (id)       => api.get(`/books/${id}`),
-  create:  (data)     => api.post('/books', data),
-  update:  (id, data) => api.put(`/books/${id}`, data),
-  delete:  (id)       => api.delete(`/books/${id}`)
+  // GET 
+  getAll: () => api.get('/books/all'), 
+
+  // GET 
+  getById: (id) => api.get(`/books/search/${id}`),
+
+  // POST 
+  create: (data) => api.post('/books/new', data),
+
+  // PUT 
+  update: (id, data) => api.put(`/books/edit/${id}`, data),
+
+  // DELETE 
+  delete: (id) => api.delete(`/books/delete/${id}`)
 }
 
 // ── Authors

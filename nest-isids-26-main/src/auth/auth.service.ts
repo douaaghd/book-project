@@ -37,14 +37,11 @@ export class AuthService {
     }
     
     async signIn(informations) {
-        // let identifiant = informations.identifiant;
-        // let password = informations.password;
-        
-        // Destructing
-        let { identifiant, password } = informations;
-        
-        let qb = await this.userRepo.createQueryBuilder('user');
-        let user = await qb.select('user')
+    // On récupère 'username' (qui vient du front) et on le renomme 'identifiant' pour ton code
+    let { username: identifiant, password } = informations; 
+    
+    let qb = this.userRepo.createQueryBuilder('user'); // Pas besoin de await ici
+    let user = await qb.select('user')
         .where('user.username = :ident or user.email = :ident')
         .setParameter("ident", identifiant)
         .getOne();

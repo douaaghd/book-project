@@ -31,26 +31,42 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
-const authStore = useAuthStore();
-const router = useRouter();
+const authStore = useAuthStore()
+const router = useRouter()
 
-const email = ref('');
-const password = ref('');
+const email = ref('')
+const password = ref('')
+const errorMessage = ref('')
+const isLoading = ref(false)
 
-const handleLogin = async () => {
-  const success = await authStore.login({
-    email: email.value,
-    password: password.value
-  });
-  
-  if (success) {
-    router.push('/');
+const onLogin = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    const success = await authStore.login({
+      username: email.value,
+      password: password.value
+    })
+
+    if (success) {
+      console.log('Connexion réussie !')
+      router.push('/')
+    } else {
+      errorMessage.value = "Identifiants incorrects"
+    }
+
+  } catch (error) {
+    console.error("Login Error:", error)
+    errorMessage.value = "Erreur serveur ou identifiants incorrects"
+  } finally {
+    isLoading.value = false
   }
-};
+}
 </script>
 
 <style scoped>

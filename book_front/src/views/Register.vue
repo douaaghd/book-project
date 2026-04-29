@@ -24,34 +24,55 @@
   </div>
 </template>
 
-
 <script setup>
-import { reactive, inject } from 'vue';
-import { useAuthStore } from '@/stores/auth';
-import { useRouter } from 'vue-router';
+import { reactive, inject, ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
-const authStore = useAuthStore();
-const router = useRouter();
-const toast = inject('toast'); // Utilisation du système de toast d'App.vue
+const authStore = useAuthStore()
+const router = useRouter()
+const toast = inject('toast')
+
+const isLoading = ref(false)
 
 const form = reactive({
   username: '',
   email: '',
-  password: ''
-});
+  password: '',
+  role: 'ROLE_USER'
+})
 
-const handleRegister = async () => {
-  const success = await authStore.register({ ...form });
-  
-  if (success) {
-    toast('Compte créé avec succès ! Connectez-vous.', 'success');
-    router.push('/login');
-  } else {
-    toast('Échec de l\'inscription', 'error');
+const onRegister = async () => {
+  if (!form.username || !form.email || !form.password) {
+    toast('Veuillez remplir tous les champs', 'error')
+    return
   }
-};
-</script>
 
+  isLoading.value = true
+
+  try {
+    const success = await authStore.register({
+      username: form.username,
+      email: form.email,
+      password: form.password,
+      role: form.role
+    })
+
+    if (success) {
+      toast('Compte créé avec succès !', 'success')
+      router.push('/login')
+    } else {
+      toast('Utilisateur déjà existant ou erreur', 'error')
+    }
+
+  } catch (error) {
+    console.error("Register Error:", error)
+    toast('Erreur serveur', 'error')
+  } finally {
+    isLoading.value = false
+  }
+}
+</script>
 <style scoped>
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s ease;

@@ -1,29 +1,45 @@
 <template>
-  <div class="min-h-screen bg-white flex flex-col">
-    <section class="py-16 px-6 text-center border-b border-gray-100">
-      <h1 class="text-4xl font-bold text-gray-800 mb-4">Découvrez des livres pour tous les goûts</h1>
-      <p class="text-gray-500 mb-8 max-w-2xl mx-auto">
+  <div class="min-h-screen bg-[#f3f4f6]">
+    <!-- Hero Section -->
+    <section class="bg-white py-16 px-4 text-center border-b border-gray-200">
+      <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Découvrez des livres pour tous les goûts</h1>
+      <p class="text-gray-500 max-w-2xl mx-auto mb-8">
         Des classiques intemporels aux derniers best-sellers, trouvez votre prochaine lecture ici.
       </p>
-      <button class="bg-[#005da4] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#007cc3] transition-all">
+      <!-- Bouton d'exploration vers AllBooks -->
+      <router-link to="/all-books" 
+        class="bg-[#005da4] text-white px-10 py-3 rounded-md shadow-lg hover:bg-[#007cc3] transition-all font-bold text-sm">
         Explorer le catalogue
-      </button>
+      </router-link>
     </section>
 
-    <main class="flex-grow max-w-6xl mx-auto py-12 px-6">
-      <h2 class="text-2xl font-semibold text-center text-gray-700 mb-12 uppercase tracking-widest">
-        Livres populaires
-      </h2>
+    <!-- Livres Populaires -->
+    <section class="py-16 px-12">
+      <h2 class="text-2xl font-bold text-center text-gray-700 mb-12">Livres populaires</h2>
       
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-        <BookCard v-for="book in books" :key="book.id" :book="book" />
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-6xl mx-auto">
+        <div v-for="book in popularBooks" :key="book.id" 
+          class="bg-white p-8 rounded-lg shadow-md flex flex-col items-center border border-gray-100 hover:shadow-xl transition-shadow">
+          <div class="w-full h-96 bg-gray-200 mb-6 overflow-hidden rounded shadow-md">
+            <img :src="book.cover || 'https://via.placeholder.com/300x450'" class="w-full h-full object-cover" />
+          </div>
+          <h3 class="font-bold text-xl text-gray-800 text-center uppercase tracking-tight">{{ book.title }}</h3>
+          <p class="text-sm text-gray-500 text-center mt-3 mb-8 px-2">
+            Un résumé captivant pour ce livre qui restera gravé dans votre mémoire.
+          </p>
+          <button @click="$router.push('/all-books')" 
+            class="bg-[#1e293b] text-white px-8 py-2 rounded shadow hover:bg-black transition-colors font-bold text-sm">
+            Voir plus
+          </button>
+        </div>
       </div>
-    </main>
+    </section>
 
-    <footer class="bg-[#1a202c] text-white py-12 px-6 text-center">
-      <h3 class="text-xl font-bold mb-2">Besoin d'aide ?</h3>
-      <p class="text-gray-400 text-sm mb-6">Contactez-nous pour toute question ou assistance.</p>
-      <button class="bg-[#007cc3] px-10 py-3 rounded-lg font-bold hover:bg-[#005da4] transition-colors">
+    <!-- Footer Aide -->
+    <footer class="bg-[#1e293b] text-white py-14 text-center mt-12">
+      <p class="font-bold text-xl mb-3">Besoin d'aide ?</p>
+      <p class="text-sm text-gray-400 mb-8 px-4">Contactez-nous pour toute question ou assistance technique.</p>
+      <button class="bg-[#005da4] px-10 py-3 rounded font-bold hover:bg-[#007cc3] transition-all">
         Contactez-nous
       </button>
     </footer>
@@ -31,35 +47,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-//import BookCard from '@/components/BookCard.vue'
-//import { useBooksStore } from '@/stores/books'
+import { ref, onMounted, computed } from 'vue';
+import { bookService } from '@/services/api';
 
-const booksStore = useBooksStore()
-const search = ref('')
-const activeCat = ref('Tous')
+const books = ref([]);
+const popularBooks = computed(() => books.value.slice(0, 3)); // Sélectionne les 3 premiers livres
 
-const filteredBooks = computed(() => {
-  let list = booksStore.books
-  const query = search.value.toLowerCase().trim()
-
-  if (query) {
-    list = list.filter(b => 
-      b.title?.toLowerCase().includes(query) || 
-      b.author?.toLowerCase().includes(query)
-    )
+onMounted(async () => {
+  try {
+    const res = await bookService.getAll();
+    books.value = res.data.listeBooks || [];
+  } catch (err) {
+    console.error("Erreur Home:", err);
   }
-
-  if (activeCat.value !== 'Tous') {
-    list = list.filter(b => b.category === activeCat.value)
-  }
-
-  return list
-})
-
-onMounted(() => {
-  booksStore.fetchAll().catch(() => {})
-})
+});
 </script>
 
 <style scoped>
