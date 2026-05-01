@@ -27,55 +27,40 @@ api.interceptors.response.use(
   }
 )
 
-// ── Auth — routes NestJS exactes du prof
+// --- Auth Service ---
 export const authService = {
-  // POST /auth/signup  — body: { email, username, password, role? }
   signup: (data) => api.post('/auth/signup', data),
-
-  // POST /auth/signin  — body: { identifiant, password }
-  //                   — réponse: { ...user, access_token }
   signin: (data) => api.post('/auth/signin', data),
-
   logout: () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
   }
 }
 
-// ── Books
-// Dans src/services/api.js
+// --- Authors Service ---
+export const authorService = {
+  getAll: () => api.get('/author/all'),
+  create: (data) => api.post('/author/add', data),
+  getById: (id) => api.get(`/author/search/${id}`),
+  update: (id, data) => api.put(`/author/edit/${id}`, data),
+  delete: (id) => api.delete(`/author/delete/${id}`)
+}
 
+// --- Books Service ---
 export const bookService = {
-  // GET 
   getAll: () => api.get('/books/all'), 
-
-  // GET 
   getById: (id) => api.get(`/books/search/${id}`),
-
-  // POST 
   create: (data) => api.post('/books/new', data),
-
-  // PUT 
   update: (id, data) => api.put(`/books/edit/${id}`, data),
-
-  // DELETE 
   delete: (id) => api.delete(`/books/delete/${id}`)
 }
 
-// ── Authors
-export const authorService = {
-  getAll:  ()         => api.get('/authors'),
-  getById: (id)       => api.get(`/authors/${id}`),
-  create:  (data)     => api.post('/authors', data),
-  update:  (id, data) => api.put(`/authors/${id}`, data),
-  delete:  (id)       => api.delete(`/authors/${id}`)
-}
-
-// ── Favourites
+// --- Favourites Service ---
 export const favouriteService = {
-  getAll: ()   => api.get('/favourites'),
-  add:    (id) => api.post(`/favourites/${id}`),
+  getAll: () => api.get('/favourites'),
+  add: (id) => api.post(`/favourites/${id}`),
   remove: (id) => api.delete(`/favourites/${id}`)
 }
 
+// CRUCIAL : Cette ligne doit être présente !
 export default api

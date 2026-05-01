@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BookEntity } from './entities/book.entity';
 import { Repository } from 'typeorm';
@@ -29,11 +29,24 @@ export class BooksService {
     // })
   }
 
-  addBook(newBook, idUser) {
-    newBook.user = idUser;
-    return this.bookRepo.save(newBook);
-  }
+  async addBook(newBook: any, idUser: number) {
+    // On crée l'instance proprement
+    const bookInstance = this.bookRepo.create(newBook);
 
+    // On lie l'auteur via l'ID reçu du front/Postman
+    (bookInstance as any).authorId = newBook.authorId;
+
+    // On règle le problème de la ligne rouge et de l'ID utilisateur
+    // On l'assigne en tant qu'objet partiel pour satisfaire TypeORM
+    (bookInstance as any).user = { id: idUser }; 
+
+    try {
+        return await this.bookRepo.save(bookInstance);
+    } catch (error) {
+        console.error("Erreur TypeORM:", error);
+        throw new InternalServerErrorException("Erreur lors de la sauvegarde du livre");
+    }
+}
   async getBookById(selectedId) {
     try {
       let selectedBooks = await this.bookRepo.find({
@@ -57,18 +70,16 @@ export class BooksService {
     }
   }
 
-  async updateBook(selectedId, uBook) {
-    let b = await this.bookRepo.preload({
+async updateBook(uBook: any, selectedId: number) {
+    const b = await this.bookRepo.preload({
       id: selectedId,
-      //   title: uBook.title,
-      //   editor: uBook.editor,
-      //   year: uBook.year,
-      //   image: uBook.image,
       ...uBook,
     });
-    let response = await this.bookRepo.save(b);
-    return { message: 'Livre mise à jour', response };
-  }
+    
+    if (!b) throw new NotFoundException("Livre non trouvé");
+    
+    return await this.bookRepo.save(b);
+}
 
   async deleteBook(id) {
     let response = await this.bookRepo.delete(id);

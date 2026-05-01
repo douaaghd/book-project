@@ -6,42 +6,27 @@ import { UserEntity } from "src/auth/entities/user.entity";
 
 @Entity('livre')
 export class BookEntity extends TimeStampISIDS {
-   
     @PrimaryGeneratedColumn()
-    id;
-    
-    @Column(
-        {
-            //name : 'titre'
-            //type : "varchar"
-            length : 50,
-            //unique : true
-            //update : false
-        }
-    )
-    title : string;
-    
+    id: number;
+
+    @Column({ length: 50 })
+    title: string;
+
     @Column()
-    year : number;
-    
-    @Column(
-        {
-            type: "varchar"
-        }
-    )
-    editor;// : string;
-    
+    year: number;
+
+    @Column({ type: "varchar" })
+    editor: string;
+
     @Column()
-    image : string;
-    
-    @ManyToOne(type => AuthorEntity, author => author.id,   {
-               // eager : true
-            })
-    author ;
-    
-    @ManyToOne(type => UserEntity, user => user.id)
-    user;
-    
-   
-    
+    image: string;
+
+    @Column()
+    authorId: number;
+
+    @ManyToOne(() => AuthorEntity, (author) => author.id)
+    author: AuthorEntity;
+
+    @ManyToOne(() => UserEntity, (user) => user.id)
+    user: UserEntity;
 }

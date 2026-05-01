@@ -17,7 +17,7 @@ import { BooksService } from './books.service';
 import { JwtAuthGuard } from 'src/guards/jwt-auth/jwt-auth.guard';
 import { request } from 'express';
 import { IsAdminGuard } from 'src/guards/is-admin/is-admin.guard';
-
+import { CreateBookDto } from './dto/create-book.dto';
 
 @Controller('books')
 //@UseGuards(JwtAuthGuard)
@@ -34,13 +34,14 @@ export class BooksController {
       console.log(err);
     }
   }
-  @UseGuards(JwtAuthGuard, IsAdminGuard)
-  //@UseGuards(IsAdminGuard)
-  @Post('/new')
-  async ajouterLivre(@Req() req: Request, @Body() body) {
-    let data = await this.bookSer.addBook(body, req["user"]["userId"]);
+  //@UseGuards(JwtAuthGuard, IsAdminGuard)
+@Post('/new')
+// On remplace @Body() body par @Body() createBookDto: CreateBookDto
+async ajouterLivre(@Req() req: Request, @Body() createBookDto: CreateBookDto) {
+    // Maintenant createBookDto est bien reconnu et validé
+    let data = await this.bookSer.addBook(createBookDto, 13);
     return { data };
-  }
+}
 
   @UseGuards(JwtAuthGuard)
   @Get('/search/:id')
