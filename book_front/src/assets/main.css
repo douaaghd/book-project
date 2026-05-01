@@ -157,8 +157,9 @@
 
   /* ── Cards ───────────────────────────────────── */
   .card {
-    @apply bg-white border border-slate-200 rounded-xl shadow-card;
-  }
+  @apply bg-white border border-slate-200 rounded-xl;
+  box-shadow: var(--shadow-card);
+}
 
   .card-hover {
     @apply card transition-all duration-200

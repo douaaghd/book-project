@@ -56,6 +56,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { bookService } from '@/services/api'
 
+
 const books = ref([])
 const popularBooks = computed(() => books.value.slice(0, 3))
 

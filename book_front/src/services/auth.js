@@ -4,7 +4,7 @@ import { authService } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
 
-  // ── State
+  // ── State 
   const token = ref(localStorage.getItem('token') || null)
   const user  = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 
