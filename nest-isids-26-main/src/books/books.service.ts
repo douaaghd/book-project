@@ -71,14 +71,26 @@ export class BooksService {
   }
 
 async updateBook(uBook: any, selectedId: number) {
+    // 1. On pré-charge l'entité avec les nouvelles valeurs
     const b = await this.bookRepo.preload({
-      id: selectedId,
-      ...uBook,
+        id: selectedId,
+        ...uBook,
     });
-    
+
     if (!b) throw new NotFoundException("Livre non trouvé");
-    
-    return await this.bookRepo.save(b);
+
+    // 2. IMPORTANT : Si le frontend envoie authorId, on doit le lier manuellement
+    // car preload ne transforme pas toujours l'ID simple en relation objet
+    if (uBook.authorId) {
+        (b as any).author = { id: uBook.authorId };
+    }
+
+    try {
+        return await this.bookRepo.save(b);
+    } catch (error) {
+        console.error("Erreur Update TypeORM:", error);
+        throw new InternalServerErrorException("Impossible de modifier le livre");
+    }
 }
 
   async deleteBook(id) {

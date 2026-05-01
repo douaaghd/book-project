@@ -1,56 +1,57 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { authService } from '@/services/api'
+import { authService } from '@/services/auth' // On pointe vers le service corrigé
 
 export const useAuthStore = defineStore('auth', () => {
 
+  // ── STATE
   const token = ref(localStorage.getItem('token') || null)
-  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
+  const user = ref(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null)
 
+  // ── GETTERS
   const isLoggedIn = computed(() => !!token.value)
-  const isAdmin = computed(() => user.value?.role === 'ROLE_ADMIN')
+  
+  // Vérification robuste du rôle pour la Navbar
+  const isAdmin = computed(() => {
+    const role = user.value?.role?.toUpperCase() || '';
+    return role === 'ADMIN' || role === 'ROLE_ADMIN';
+  })
 
-  // ✅ LOGIN
-  function login(credentials) {
-    return authService.signin({
-      username: credentials.username,
-      password: credentials.password
-    })
-    .then((res) => {
+  // ── ACTIONS
+  async function login(credentials) {
+    try {
+      const res = await authService.signin(credentials)
       const data = res.data
 
+      // On stocke les données
       token.value = data.access_token
       user.value = {
         id: data.id,
         username: data.username,
         email: data.email,
-        role: data.role
+        role: data.role // Le backend doit envoyer 'ADMIN' ou 'ROLE_ADMIN'
       }
 
       localStorage.setItem('token', data.access_token)
       localStorage.setItem('user', JSON.stringify(user.value))
-
-      return true
-    })
-    .catch((err) => {
-      console.error("Login failed:", err)
+      
+      return true 
+    } catch (error) {
+      console.error("Erreur Login Store:", error)
       return false
-    })
+    }
   }
 
-  // ✅ REGISTER (MANQUAIT CHEZ TOI)
-  function register(userData) {
-    return authService.signup(userData)
-      .then((res) => {
-        return true
-      })
-      .catch((err) => {
-        console.error("Register failed:", err)
-        return false
-      })
+  async function register(userData) {
+    try {
+      await authService.signup(userData)
+      return true
+    } catch (error) {
+      console.error("Erreur Register Store:", error)
+      return false
+    }
   }
 
-  // ✅ LOGOUT
   function logout() {
     token.value = null
     user.value = null
@@ -58,13 +59,13 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('user')
   }
 
-  return {
-    token,
-    user,
-    isLoggedIn,
-    isAdmin,
-    login,
-    register, // 🔥 OBLIGATOIRE
-    logout
+  return { 
+    token, 
+    user, 
+    isLoggedIn, 
+    isAdmin, 
+    login, 
+    register, 
+    logout 
   }
 })

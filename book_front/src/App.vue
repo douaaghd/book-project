@@ -1,12 +1,15 @@
 <template>
   <div class="min-h-screen bg-[#f8fafc] flex flex-col font-sans">
     
+    <!-- On affiche la même Navbar pour tout le monde -->
+    <!-- C'est à l'intérieur de Navbar.vue qu'on gérera l'affichage Admin/User -->
     <Navbar />
 
     <main class="flex-grow flex flex-col">
       <router-view :key="$route.fullPath"></router-view>
     </main>
 
+    <!-- Système de Toasts -->
     <Teleport to="body">
       <div class="fixed bottom-8 right-8 z-[100] flex flex-col gap-3 pointer-events-none">
         <TransitionGroup name="toast">
@@ -26,8 +29,9 @@
 
 <script setup>
 import { ref, provide } from 'vue'
-import Navbar from '@/components/Navbar.vue'
+import Navbar from '@/components/Navbar.vue' // Le seul import dont tu as besoin
 
+// TOAST SYSTEM
 const toasts = ref([])
 let counter = 0
 
@@ -41,17 +45,3 @@ provide('toast', (message) => {
   setTimeout(() => removeToast(id), 4000)
 })
 </script>
-
-<style>
-/* Animation légère pour les toasts uniquement */
-.toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
-.toast-enter-from { opacity: 0; transform: translateX(30px); }
-.toast-leave-to { opacity: 0; transform: scale(0.9); }
-
-/* On s'assure que le body prend toute la hauteur */
-html, body, #app {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-</style>

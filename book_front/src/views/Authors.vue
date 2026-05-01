@@ -25,7 +25,7 @@
         <!-- Add author section -->
         <div class="add-section">
           <div class="section-label">
-            <span class="s-num">01</span> Ajouter un auteur
+            <span class="s-num">01</span> {{ isEditing ? 'Modifier l\'auteur' : 'Ajouter un auteur' }}
           </div>
 
           <div class="add-row">
@@ -47,12 +47,22 @@
             </div>
             <div class="field field-btn">
               <label class="label-spacer">&nbsp;</label>
-              <button @click="handleAddAuthor" class="btn-add">
-                <svg viewBox="0 0 20 20" fill="currentColor" width="16">
-                  <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/>
-                </svg>
-                Ajouter l'auteur
-              </button>
+              <div class="btn-group">
+                <button v-if="!isEditing" @click="handleAddAuthor" class="btn-add">
+                  <svg viewBox="0 0 20 20" fill="currentColor" width="16">
+                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/>
+                  </svg>
+                  Ajouter l'auteur
+                </button>
+                <template v-else>
+                  <button @click="handleUpdateAuthor" class="btn-add btn-edit-confirm">
+                    Confirmer
+                  </button>
+                  <button @click="cancelEdit" class="btn-cancel">
+                    Annuler
+                  </button>
+                </template>
+              </div>
             </div>
           </div>
         </div>
@@ -79,11 +89,12 @@
                   <th>Prénom</th>
                   <th>Nom</th>
                   <th style="width:100px">Initiales</th>
+                  <th style="width:160px; text-align: center;">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="authorsList.length === 0">
-                  <td colspan="4" class="empty-cell">
+                  <td colspan="5" class="empty-cell">
                     <div class="empty-state">
                       <span>📖</span>
                       <span>Aucun auteur enregistré</span>
@@ -103,6 +114,20 @@
                       {{ (auth.prenom?.[0] ?? '').toUpperCase() }}{{ (auth.nom?.[0] ?? '').toUpperCase() }}
                     </div>
                   </td>
+                  <td class="td-actions">
+                    <div class="actions-wrapper">
+                      <button @click="prepareEdit(auth)" class="action-btn edit" title="Modifier">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="14">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </button>
+                      <button @click="handleDeleteAuthor(auth.id)" class="action-btn delete" title="Supprimer">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="14">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -120,13 +145,12 @@ import { authorService } from '@/services/api';
 
 const authorsList = ref([]);
 const newAuthor = ref({ prenom: '', nom: '' });
+const isEditing = ref(false);
+const editingId = ref(null);
 
-// Ajout d'un try/catch pour éviter que l'écran reste blanc en cas d'erreur
 const loadAuthors = async () => {
   try {
     const res = await authorService.getAll();
-    // Le backend NestJS renvoie souvent les données directement ou dans res.data
-    // On s'assure de récupérer un tableau vide si rien n'est renvoyé
     authorsList.value = res.data || [];
   } catch (err) {
     console.error("Erreur de chargement des auteurs :", err);
@@ -135,7 +159,6 @@ const loadAuthors = async () => {
 };
 
 const handleAddAuthor = async () => {
-  // Petite validation avant d'envoyer
   if (!newAuthor.value.prenom || !newAuthor.value.nom) {
     alert("Veuillez remplir le prénom et le nom.");
     return;
@@ -143,12 +166,48 @@ const handleAddAuthor = async () => {
 
   try {
     await authorService.create(newAuthor.value);
-    alert("Auteur ajouté avec succès !"); // Toujours bien pour confirmer pendant la démo
-    newAuthor.value = { prenom: '', nom: '' }; // Reset
-    await loadAuthors(); // Rafraîchir la liste
+    alert("Auteur ajouté avec succès !");
+    newAuthor.value = { prenom: '', nom: '' };
+    await loadAuthors();
   } catch (error) {
     console.error("Erreur lors de l'ajout :", error);
     alert("Erreur lors de l'ajout de l'auteur.");
+  }
+};
+
+const prepareEdit = (auth) => {
+  isEditing.value = true;
+  editingId.value = auth.id;
+  newAuthor.value = { prenom: auth.prenom, nom: auth.nom };
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const cancelEdit = () => {
+  isEditing.value = false;
+  editingId.value = null;
+  newAuthor.value = { prenom: '', nom: '' };
+};
+
+const handleUpdateAuthor = async () => {
+  try {
+    await authorService.update(editingId.value, newAuthor.value);
+    alert("Auteur mis à jour !");
+    cancelEdit();
+    await loadAuthors();
+  } catch (error) {
+    console.error("Erreur lors de la modif :", error);
+    alert("Erreur lors de la modification.");
+  }
+};
+
+const handleDeleteAuthor = async (id) => {
+  if (!confirm("Voulez-vous vraiment supprimer cet auteur ?")) return;
+  try {
+    await authorService.delete(id);
+    await loadAuthors();
+  } catch (error) {
+    console.error("Erreur suppression :", error);
+    alert("Impossible de supprimer cet auteur.");
   }
 };
 
@@ -293,8 +352,6 @@ onMounted(loadAuthors);
 }
 
 /* Add section */
-.add-section { }
-
 .add-row {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
@@ -334,6 +391,8 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(0,124,195,0.12);
 }
 
+.btn-group { display: flex; gap: 8px; }
+
 .btn-add {
   display: flex;
   align-items: center;
@@ -356,10 +415,20 @@ input:focus {
   box-shadow: 0 10px 24px rgba(0,93,164,0.4);
 }
 
+.btn-cancel {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
 .divider { height: 1px; background: #e0edf7; margin: 28px 0; }
 
 /* Table section */
-.table-section { }
 .table-header {
   display: flex;
   align-items: center;
@@ -439,6 +508,24 @@ tbody td { padding: 13px 20px; color: #1e3a5a; }
   letter-spacing: 0.02em;
 }
 
+.td-actions { text-align: center; }
+.actions-wrapper { display: flex; gap: 8px; justify-content: center; }
+
+.action-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn.edit { background: #eff6ff; color: #3b82f6; }
+.action-btn.edit:hover { background: #3b82f6; color: #fff; }
+.action-btn.delete { background: #fef2f2; color: #ef4444; }
+.action-btn.delete:hover { background: #ef4444; color: #fff; }
+
 .empty-cell { padding: 52px 20px !important; }
 .empty-state {
   display: flex;
@@ -446,9 +533,8 @@ tbody td { padding: 13px 20px; color: #1e3a5a; }
   align-items: center;
   gap: 10px;
   color: #9ab8cf;
-  font-size: 0.88rem;
-  font-size: 2rem;
 }
+.empty-state span:first-child { font-size: 2rem; }
 .empty-state span:last-child { font-size: 0.88rem; }
 
 @media (max-width: 700px) {

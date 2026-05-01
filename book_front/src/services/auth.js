@@ -1,56 +1,16 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { authService } from '@/services/api'
+// src/services/auth.js
+import axios from 'axios';
 
-export const useAuthStore = defineStore('auth', () => {
+// On retire le "/api" car tes logs NestJS ne le mentionnent pas
+const API_URL = 'http://127.0.0.1:3000/auth'; 
 
-  // ── State 
-  const token = ref(localStorage.getItem('token') || null)
-  const user  = ref(JSON.parse(localStorage.getItem('user') || 'null'))
+export const authService = {
+  async signin(credentials) {
+    // Cela appellera : http://127.0.0.1:3000/auth/signin
+    return axios.post(`${API_URL}/signin`, credentials);
+  },
 
-  // ── Getters
-  const isLoggedIn = computed(() => !!token.value)
-  const isAdmin    = computed(() => user.value?.role === 'ROLE_ADMIN')
-  const isUser     = computed(() => isLoggedIn.value && !isAdmin.value)
-
-  // ── Actions — retournent des Promise (.then/.catch)
-
-  // Connexion — POST /auth/signin
-  // body: { identifiant, password }
-  // réponse: { id, username, email, role, access_token, ... }
-  function login(credentials) {
-    return authService.signin(credentials)
-      .then((res) => {
-        const data = res.data
-        // Le backend renvoie access_token (pas token)
-        token.value = data.access_token
-        user.value  = {
-          id:       data.id,
-          username: data.username,
-          email:    data.email,
-          role:     data.role
-        }
-        localStorage.setItem('token', data.access_token)
-        localStorage.setItem('user',  JSON.stringify(user.value))
-        return user.value
-      })
+  async signup(userData) {
+    return axios.post(`${API_URL}/signup`, userData);
   }
-
-  // Inscription — POST /auth/signup
-  // body: { email, username, password, role? }
-  function register(userData) {
-    return authService.signup(userData)
-      .then((res) => {
-        // Le signup ne renvoie pas de token → on redirige vers login
-        return res.data
-      })
-  }
-
-  function logout() {
-    authService.logout()
-    token.value = null
-    user.value  = null
-  }
-
-  return { token, user, isLoggedIn, isAdmin, isUser, login, register, logout }
-})
+};
